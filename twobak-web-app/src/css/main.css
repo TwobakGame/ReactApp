@@ -1,0 +1,25 @@
+.watermelon-red {
+    color: #fc5a8d;
+}
+.join-button {
+    background-color: #32a852;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.join-button:hover {
+    background-color: #2b8a46;
+}
+.nav-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.nav-button:hover {
+    background-color: #f3f4f6;
+}

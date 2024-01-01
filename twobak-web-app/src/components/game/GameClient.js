@@ -296,6 +296,7 @@ function GameClient() {
                             sprite: { texture: `${fruit.name}.png` }
                         },
                         restitution: 0.5, //탄성
+                        velocity: now.velocity,
                     });
 
                     World.add(world, body);

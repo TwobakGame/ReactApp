@@ -248,20 +248,8 @@ function GameManager() {
     function sendWorld() {
         if (dataChannel.readyState === "open") {
             let bodies = Composite.allBodies(world);
-            //console.log(Composite.allBodies(world));
+
             console.log(bodies);
-            function replacer(key, value) {
-                if (typeof value === 'object' && value !== null) {
-                    if (cache.includes(value)) return;
-                    cache.push(value);
-                }
-                return value;
-            }
-            
-            const cache = [];
-            //dataChannel.send(JSON.stringify({ event: "world", bodies: bodies }, replacer));
-            //dataChannel.send(JSON.stringify({ event: "world2", world: world }, replacer));
-            //Composite.rebase(world);
 
             let circleBodies = [];
 
@@ -271,7 +259,8 @@ function GameManager() {
                     let x = body.position.x;
                     let y = body.position.y;
                     let angle = body.angle;
-                    circleBodies.push({index: index, x: x, y: y, angle: angle});
+                    let velocity = body.velocity;
+                    circleBodies.push({index: index, x: x, y: y, angle: angle, velocity});
                 }
             }
             dataChannel.send(JSON.stringify({ event: 'world', bodies: circleBodies }));

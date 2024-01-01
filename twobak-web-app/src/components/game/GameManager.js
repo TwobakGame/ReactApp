@@ -1,4 +1,4 @@
-import { Bodies, Body, Collision, Engine, Events, Render, Runner, World } from "matter-js";
+import { Bodies, Body, Collision, Engine, Events, Render, Runner, World, Composite } from "matter-js";
 import { FRUITS_BASE as FRUITS } from "./fruits";
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
@@ -20,6 +20,7 @@ const iceConfig = Object.freeze({
 let currentBody = null;
 let currentFruit = null;
 let disableAction = false;
+let myTurnJs = true;
 let interval = null;
 let socket = null;
 const pc = new RTCPeerConnection({
@@ -36,7 +37,7 @@ const pc = new RTCPeerConnection({
     ]
 });
 
-let dataChannel = pc.createDataChannel("chat");
+let dataChannel = pc.createDataChannel("channel");
 
 function GameManager() {
 
@@ -58,57 +59,66 @@ function GameManager() {
         initSocket();
 
         window.onkeydown = (event) => {
-            if (disableAction) {
+            if (disableAction || !myTurnJs) {
                 return;
             }
+
             switch (event.code) {
                 case "KeyA":
                     if (interval) return;
                     interval = setInterval(() => {
-                        if (currentBody.position.x - currentFruit.radius > 30)
+                        if (currentBody.position.x - currentFruit.radius > 30) {
+                            sendEvent(event.code);
                             Body.setPosition(currentBody, {
                                 x: currentBody.position.x - 1,
                                 y: currentBody.position.y,
                             });
+                        }
                     }, 5);
 
                     break;
                 case "KeyD":
                     if (interval) return;
                     interval = setInterval(() => {
-                        if (currentBody.position.x - currentFruit.radius < 510)
+                        if (currentBody.position.x - currentFruit.radius < 510) {
+                            sendEvent(event.code);
                             Body.setPosition(currentBody, {
                                 x: currentBody.position.x + 1,
                                 y: currentBody.position.y,
                             });
+                        }
                     }, 5);
 
                     break;
                 case "KeyS":
+                    sendEvent(event.code);
                     currentBody.isSleeping = false;
                     disableAction = true;
+                    myTurnJs = !myTurnJs;
                     setTimeout(() => {
-                        addFruit();
                         disableAction = false;
+                        sendWorld();
                     }, 1000);
                     break;
             }
-        }
+        };
 
         window.onkeyup = (event) => {
             switch (event.code) {
                 case "KeyA":
                 case "KeyD":
-                    clearInterval(interval);
-                    interval = null;
+                    if(myTurnJs) {
+                        sendEvent("done");
+                        clearInterval(interval);
+                        interval = null;
+                    }
             }
-        }
+        };
 
         Events.on(engine, "collisionStart", (event) => {
             event.pairs.forEach((collision) => {
                 if (collision.bodyA.index === collision.bodyB.index) {
                     const index = collision.bodyA.index;
-
                     World.remove(world, [collision.bodyA, collision.bodyB]);
                     if (index === FRUITS.length - 1) {
                         return;
@@ -162,24 +172,22 @@ function GameManager() {
         Render.run(render);
         Runner.run(engine);
 
-        addFruit();
-
     }, []);
 
     const initSocket = async () => {
         socket = io("http://localhost:443");
 
-        socket.on('offer', async(offer) => {
+        socket.on('offer', async (offer) => {
             console.log("offer 받음");
-            if(pc.signalingState === 'have-local-offer') {
+            if (pc.signalingState === 'have-local-offer') {
                 try {
                     await pc.setRemoteDescription(offer);
-                    const answer =  await pc.createAnswer();
+                    const answer = await pc.createAnswer();
                     pc.setLocalDescription(answer);
                     socket.emit("answer", answer);
                 } catch (error) {
                     console.log('SDP 파싱 오류', error);
-                } 
+                }
             }
             else {
                 console.log("have-local-offer 상태가 아님");
@@ -191,12 +199,12 @@ function GameManager() {
         });
 
         if (socket) {
-            await socket.emit('join', 123);
+            socket.emit('join', 123);
             pc.addEventListener("icecandidate", handleIce);
             pc.ondatachannel = event => {
                 var channel = event.channel;
                 channel.onopen = () => console.log("데이터 채널 오픈");
-                channel.onmessage = e => console.log("메시지받음", e.data);
+                channel.onmessage = e => {recieveEvent(e)};
             }
             pc.setLocalDescription(await pc.createOffer());
         }
@@ -207,9 +215,13 @@ function GameManager() {
         console.log("sent my candidate");
     }
 
-    function addFruit() {
+    function addFruit(index) {
         console.log("addFruit");
-        const index = Math.floor(Math.random() * 5);
+        if (index == -1) {
+            console.log("and this is my fruit");
+            index = Math.floor(Math.random() * 5);
+            sendEvent("addFruit", index);
+        }
         const fruit = FRUITS[index];
 
         const body = Bodies.circle(300, 50, fruit.radius, {
@@ -227,9 +239,96 @@ function GameManager() {
         World.add(world, body);
     }
 
+    function sendEvent(eventCode, indexNum) {
+        if (dataChannel.readyState === "open") {
+            dataChannel.send(JSON.stringify({ event: eventCode, index: indexNum }));
+        }
+    }
+
+    function sendWorld() {
+        if (dataChannel.readyState === "open") {
+            let bodies = Composite.allBodies(world);
+            //console.log(Composite.allBodies(world));
+            console.log(bodies);
+            function replacer(key, value) {
+                if (typeof value === 'object' && value !== null) {
+                    if (cache.includes(value)) return;
+                    cache.push(value);
+                }
+                return value;
+            }
+            
+            const cache = [];
+            //dataChannel.send(JSON.stringify({ event: "world", bodies: bodies }, replacer));
+            //dataChannel.send(JSON.stringify({ event: "world2", world: world }, replacer));
+            //Composite.rebase(world);
+
+            let circleBodies = [];
+
+            for(let body of bodies) {
+                if(body.label === 'Circle Body') {
+                    let index = body.index;
+                    let x = body.position.x;
+                    let y = body.position.y;
+                    let angle = body.angle;
+                    circleBodies.push({index: index, x: x, y: y, angle: angle});
+                }
+            }
+            dataChannel.send(JSON.stringify({ event: 'world', bodies: circleBodies }));
+        }
+    }
+
+    function recieveEvent(event) {
+        const data = JSON.parse(event.data);
+        console.log(data);
+        switch (data.event) {
+            case "KeyA":
+                if (interval) return;
+                interval = setInterval(() => {
+                    if (currentBody.position.x - currentFruit.radius > 30) {
+                        Body.setPosition(currentBody, {
+                            x: currentBody.position.x - 1,
+                            y: currentBody.position.y,
+                        });
+                    }
+                }, 5);
+                break;
+
+            case "KeyD":
+                if (interval) return;
+                interval = setInterval(() => {
+                    if (currentBody.position.x - currentFruit.radius < 510) {
+                        Body.setPosition(currentBody, {
+                            x: currentBody.position.x + 1,
+                            y: currentBody.position.y,
+                        });
+                    }
+                }, 5);
+                break;
+
+            case "KeyS":
+                currentBody.isSleeping = false;
+                disableAction = true;
+                myTurnJs = !myTurnJs;
+                setTimeout(() => {
+                    disableAction = false;
+                    addFruit(-1);
+                }, 1000);
+                break;
+            case "done":
+                clearInterval(interval);
+                interval = null;
+                break;
+            case "addFruit":
+                addFruit(data.index);
+                break;
+        }
+    }
+
     return (
         <>
             <h1>제목</h1>
+            <button onClick={() => addFruit(-1)}>시작하기</button>
         </>
     );
 

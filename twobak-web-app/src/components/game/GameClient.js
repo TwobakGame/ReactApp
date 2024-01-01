@@ -1,4 +1,4 @@
-import { Bodies, Body, Collision, Engine, Events, Render, Runner, World } from "matter-js";
+import { Bodies, Body, Collision, Engine, Events, Render, Runner, World, Composite } from "matter-js";
 import { FRUITS_BASE as FRUITS } from "./fruits";
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
@@ -20,6 +20,7 @@ const iceConfig = Object.freeze({
 let currentBody = null;
 let currentFruit = null;
 let disableAction = false;
+let myTurnJs = false;
 let interval = null;
 let socket = null;
 const pc = new RTCPeerConnection({
@@ -36,7 +37,7 @@ const pc = new RTCPeerConnection({
     ]
 });
 
-let dataChannel = pc.createDataChannel("chat");
+let dataChannel = pc.createDataChannel("channel");
 function GameClient() {
 
     const [engine, setEngine] = useState(Engine.create());
@@ -57,51 +58,60 @@ function GameClient() {
         initSocket();
 
         window.onkeydown = (event) => {
-            if (disableAction) {
+            if (disableAction || !myTurnJs) {
                 return;
             }
+
             switch (event.code) {
                 case "KeyA":
                     if (interval) return;
                     interval = setInterval(() => {
-                        if (currentBody.position.x - currentFruit.radius > 30)
+                        if (currentBody.position.x - currentFruit.radius > 30) {
+                            sendEvent(event.code);
                             Body.setPosition(currentBody, {
                                 x: currentBody.position.x - 1,
                                 y: currentBody.position.y,
                             });
+                        }
                     }, 5);
 
                     break;
                 case "KeyD":
                     if (interval) return;
                     interval = setInterval(() => {
-                        if (currentBody.position.x - currentFruit.radius < 510)
+                        if (currentBody.position.x - currentFruit.radius < 510) {
+                            sendEvent(event.code);
                             Body.setPosition(currentBody, {
                                 x: currentBody.position.x + 1,
                                 y: currentBody.position.y,
                             });
+                        }
                     }, 5);
 
                     break;
                 case "KeyS":
+                    sendEvent(event.code);
                     currentBody.isSleeping = false;
                     disableAction = true;
+                    myTurnJs = !myTurnJs;
                     setTimeout(() => {
-                        addFruit();
                         disableAction = false;
                     }, 1000);
                     break;
             }
-        }
+        };
 
         window.onkeyup = (event) => {
             switch (event.code) {
                 case "KeyA":
                 case "KeyD":
-                    clearInterval(interval);
-                    interval = null;
+                    if (myTurnJs) {
+                        sendEvent("done");
+                        clearInterval(interval);
+                        interval = null;
+                    }
             }
-        }
+        };
 
         Events.on(engine, "collisionStart", (event) => {
             event.pairs.forEach((collision) => {
@@ -161,11 +171,7 @@ function GameClient() {
         Render.run(render);
         Runner.run(engine);
 
-        addFruit();
-
     }, []);
-
-
 
     const initSocket = async () => {
         socket = io("http://localhost:443");
@@ -177,14 +183,17 @@ function GameClient() {
         socket.on('ice', (ice) => {
             pc.addIceCandidate(ice);
         });
+        socket.on('world', (hostWorld) => {
+            console.log("동기화 월드 : ", hostWorld);
+        })
 
         if (socket) {
-            await socket.emit('join', 123);
+            socket.emit('join', 123);
             pc.addEventListener("icecandidate", handleIce);
             pc.ondatachannel = event => {
                 var channel = event.channel;
                 channel.onopen = () => console.log("데이터 채널 오픈");
-                channel.onmessage = e => console.log("메시지받음", e.data);
+                channel.onmessage = e => { recieveEvent(e) };
             }
             const offer = await pc.createOffer();
             pc.setLocalDescription(offer);
@@ -198,9 +207,13 @@ function GameClient() {
         console.log("sent my candidate");
     }
 
-    function addFruit() {
+    function addFruit(index) {
         console.log("addFruit");
-        const index = Math.floor(Math.random() * 5);
+        if (index == -1) {
+            console.log("and this is my fruit");
+            index = Math.floor(Math.random() * 5);
+            sendEvent("addFruit", index);
+        }
         const fruit = FRUITS[index];
 
         const body = Bodies.circle(300, 50, fruit.radius, {
@@ -218,18 +231,86 @@ function GameClient() {
         World.add(world, body);
     }
 
-    function sendTest() {
+    function sendEvent(eventCode, indexNum) {
         if (dataChannel.readyState === "open") {
-            dataChannel.send("가냐고");
-            
+            dataChannel.send(JSON.stringify({ event: eventCode, index: indexNum }));
         }
-        console.log("눌럿다");
     }
+
+    function recieveEvent(event) {
+        const data = JSON.parse(event.data);
+        console.log(data);
+        switch (data.event) {
+            case "KeyA":
+                if (interval) return;
+                interval = setInterval(() => {
+                    if (currentBody.position.x - currentFruit.radius > 30) {
+                        Body.setPosition(currentBody, {
+                            x: currentBody.position.x - 1,
+                            y: currentBody.position.y,
+                        });
+                    }
+                }, 5);
+                break;
+
+            case "KeyD":
+                if (interval) return;
+                interval = setInterval(() => {
+                    if (currentBody.position.x - currentFruit.radius < 510) {
+                        Body.setPosition(currentBody, {
+                            x: currentBody.position.x + 1,
+                            y: currentBody.position.y,
+                        });
+                    }
+                }, 5);
+                break;
+
+            case "KeyS":
+                currentBody.isSleeping = false;
+                disableAction = true;
+                myTurnJs = !myTurnJs;
+
+                setTimeout(() => {
+                    disableAction = false;
+                }, 1000);
+                break;
+            case "done":
+                clearInterval(interval);
+                interval = null;
+                break;
+            case "addFruit":
+                addFruit(data.index);
+                break;
+            case "world":
+                console.log(data.bodies);
+                World.clear(world, true);
+
+                for (let now of data.bodies) {
+                    const fruit = FRUITS[now.index];
+
+                    const body = Bodies.circle(now.x, now.y, fruit.radius, {
+                        index: now.index,
+                        angle: now.angle,
+                        isSleeping: false, //대기상태
+                        render: {
+                            sprite: { texture: `${fruit.name}.png` }
+                        },
+                        restitution: 0.5, //탄성
+                    });
+
+                    World.add(world, body);
+                }
+
+                addFruit(-1);
+
+                break;
+        }
+    }
+
 
     return (
         <>
             <h1>제목</h1>
-            <button onClick={sendTest}>보내보기</button>
         </>
     );
 

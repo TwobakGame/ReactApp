@@ -23,3 +23,7 @@
 .nav-button:hover {
     background-color: #f3f4f6;
 }
+.reject-button {
+    color:  red;
+    margin-left : 17vh;
+}

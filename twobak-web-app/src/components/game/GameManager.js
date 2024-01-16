@@ -39,7 +39,7 @@ const pc = new RTCPeerConnection({
 
 let dataChannel = pc.createDataChannel("channel");
 
-function GameManager() {
+function GameManager(props) {
 
     const [engine, setEngine] = useState(Engine.create());
     const [render, setRender] = useState(Render.create({
@@ -54,6 +54,7 @@ function GameManager() {
     }
     ));
     const [world, setWorld] = useState(engine.world);
+    const roomNumber = props.roomnumber;
 
     useEffect(() => {
         initSocket();
@@ -199,7 +200,7 @@ function GameManager() {
         });
 
         if (socket) {
-            socket.emit('join', 123);
+            socket.emit('join', roomNumber);
             pc.addEventListener("icecandidate", handleIce);
             pc.ondatachannel = event => {
                 var channel = event.channel;

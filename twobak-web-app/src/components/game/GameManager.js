@@ -1,7 +1,8 @@
 import { Bodies, Body, Collision, Engine, Events, Render, Runner, World, Composite } from "matter-js";
 import { FRUITS_BASE as FRUITS } from "./fruits";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
+import Point from "./Point";
 
 const iceConfig = Object.freeze({
     iceServers: [
@@ -55,6 +56,11 @@ function GameManager(props) {
     ));
     const [world, setWorld] = useState(engine.world);
     const roomNumber = props.roomnumber;
+    const pointRef = useRef();
+
+    const changePoint = (idx) => {
+        pointRef.current.handlePoint(idx);
+    };
 
     useEffect(() => {
         initSocket();
@@ -92,6 +98,8 @@ function GameManager(props) {
 
                     break;
                 case "KeyS":
+                    sendEvent("done");
+                    clearInterval(interval);
                     sendEvent(event.code);
                     currentBody.isSleeping = false;
                     disableAction = true;
@@ -121,6 +129,8 @@ function GameManager(props) {
                 if (collision.bodyA.index === collision.bodyB.index) {
                     const index = collision.bodyA.index;
                     World.remove(world, [collision.bodyA, collision.bodyB]);
+                    changePoint(index);
+                    sendEvent('point', index);
                     if (index === FRUITS.length - 1) {
                         return;
                     }
@@ -139,8 +149,8 @@ function GameManager(props) {
 
                     World.add(world, newBody);
                 }
-
                 if (!disableAction && (collision.bodyA.name === "topLine" || collision.bodyB.name === "tobLine")) {
+                    sendEvent("GameOver");
                     alert("Game Over!");
                 }
             })
@@ -217,9 +227,7 @@ function GameManager(props) {
     }
 
     function addFruit(index) {
-        console.log("addFruit");
         if (index == -1) {
-            console.log("and this is my fruit");
             index = Math.floor(Math.random() * 5);
             sendEvent("addFruit", index);
         }
@@ -249,8 +257,6 @@ function GameManager(props) {
     function sendWorld() {
         if (dataChannel.readyState === "open") {
             let bodies = Composite.allBodies(world);
-
-            console.log(bodies);
 
             let circleBodies = [];
 
@@ -319,6 +325,7 @@ function GameManager(props) {
         <>
             <h1>제목</h1>
             <button onClick={() => addFruit(-1)}>시작하기</button>
+            <Point ref={pointRef}/>
         </>
     );
 

@@ -1,7 +1,8 @@
 import { Bodies, Body, Collision, Engine, Events, Render, Runner, World, Composite } from "matter-js";
 import { FRUITS_BASE as FRUITS } from "./fruits";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
+import Point from "./Point";
 
 const iceConfig = Object.freeze({
     iceServers: [
@@ -54,6 +55,11 @@ function GameClient(props) {
     ));
     const [world, setWorld] = useState(engine.world);
     const roomNumber = props.roomnumber;
+    const pointRef = useRef();
+
+    const changePoint = (idx) => {
+        pointRef.current.handlePoint(idx);
+    };
 
     useEffect(() => {
         initSocket();
@@ -91,6 +97,8 @@ function GameClient(props) {
 
                     break;
                 case "KeyS":
+                    sendEvent("done");
+                    clearInterval(interval);
                     sendEvent(event.code);
                     currentBody.isSleeping = false;
                     disableAction = true;
@@ -118,7 +126,6 @@ function GameClient(props) {
             event.pairs.forEach((collision) => {
                 if (collision.bodyA.index === collision.bodyB.index) {
                     const index = collision.bodyA.index;
-
                     World.remove(world, [collision.bodyA, collision.bodyB]);
                     if (index === FRUITS.length - 1) {
                         return;
@@ -137,10 +144,6 @@ function GameClient(props) {
                     );
 
                     World.add(world, newBody);
-                }
-
-                if (!disableAction && (collision.bodyA.name === "topLine" || collision.bodyB.name === "tobLine")) {
-                    alert("Game Over!");
                 }
             })
         });
@@ -184,9 +187,6 @@ function GameClient(props) {
         socket.on('ice', (ice) => {
             pc.addIceCandidate(ice);
         });
-        socket.on('world', (hostWorld) => {
-            console.log("동기화 월드 : ", hostWorld);
-        })
 
         if (socket) {
             socket.emit('join', roomNumber);
@@ -209,9 +209,7 @@ function GameClient(props) {
     }
 
     function addFruit(index) {
-        console.log("addFruit");
         if (index == -1) {
-            console.log("and this is my fruit");
             index = Math.floor(Math.random() * 5);
             sendEvent("addFruit", index);
         }
@@ -306,6 +304,11 @@ function GameClient(props) {
                 addFruit(-1);
 
                 break;
+            case "point":
+                pointRef.current.handlePoint(data.index);
+                break;
+            case "GameOver":
+                alert("Game Over!");
         }
     }
 
@@ -313,6 +316,7 @@ function GameClient(props) {
     return (
         <>
             <h1>제목</h1>
+            <Point ref={pointRef}/>
         </>
     );
 

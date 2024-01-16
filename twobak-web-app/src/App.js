@@ -11,8 +11,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Main/>}></Route>
-          <Route path='/gamemanager' element={<GameManager/>}></Route>
-          <Route path='/gameclient' element={<GameClient/>}></Route>
+          <Route path='/gamemanager/:roomnumber' element={<GameManager/>}></Route>
+          <Route path='/gameclient/:roomnumber' element={<GameClient/>}></Route>
         </Routes>
       </BrowserRouter>
     </div>

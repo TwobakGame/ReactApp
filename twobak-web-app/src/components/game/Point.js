@@ -6,11 +6,16 @@ const Point = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         handlePoint,
+        resetPoint
     }));
 
     const handlePoint = (idx) => {
         idx = idx + 1;
         setPoint(point + idx + idx*2);
+    }
+
+    const resetPoint = () => {
+        setPoint(0);
     }
 
     return (

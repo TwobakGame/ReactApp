@@ -64,7 +64,7 @@ function GameClient(props) {
     useEffect(() => {
         initSocket();
 
-        window.onkeydown = (event) => {
+        const handleKeyDown = (event) => {
             if (disableAction || !myTurnJs) {
                 return;
             }
@@ -110,7 +110,7 @@ function GameClient(props) {
             }
         };
 
-        window.onkeyup = (event) => {
+        const handleKeyUp = (event) => {
             switch (event.code) {
                 case "KeyA":
                 case "KeyD":
@@ -121,6 +121,9 @@ function GameClient(props) {
                     }
             }
         };
+      
+        window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("keydown", handleKeyDown);
 
         Events.on(engine, "collisionStart", (event) => {
             event.pairs.forEach((collision) => {
@@ -172,8 +175,27 @@ function GameClient(props) {
 
         World.add(world, [leftWall, rightWall, ground, tobLine]);
 
+        const renderElement = render.canvas;
+        renderElement.style.marginLeft = "auto";
+        renderElement.style.marginRight = "auto";
+        renderElement.style.display = "block";
+
         Render.run(render);
         Runner.run(engine);
+
+        return () => {
+            World.clear(world, true);
+
+            Render.stop(render);
+            Runner.stop(engine);
+
+            if (render.canvas) {
+                render.canvas.remove();
+            }
+
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        }
 
     }, []);
 
@@ -230,6 +252,12 @@ function GameClient(props) {
         World.add(world, body);
     }
 
+    function gameOver() {
+        alert("Game Over!");
+        World.clear(world, true);
+        pointRef.current.resetPoint();
+    }
+
     function sendEvent(eventCode, indexNum) {
         if (dataChannel.readyState === "open") {
             dataChannel.send(JSON.stringify({ event: eventCode, index: indexNum }));
@@ -271,7 +299,8 @@ function GameClient(props) {
 
                 setTimeout(() => {
                     disableAction = false;
-                }, 1000);
+                    addFruit(-1);
+                }, 1200);
                 break;
             case "done":
                 clearInterval(interval);
@@ -301,14 +330,13 @@ function GameClient(props) {
                     World.add(world, body);
                 }
 
-                addFruit(-1);
-
                 break;
             case "point":
                 pointRef.current.handlePoint(data.index);
                 break;
             case "GameOver":
                 alert("Game Over!");
+                gameOver();
         }
     }
 

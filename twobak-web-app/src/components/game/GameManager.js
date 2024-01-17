@@ -65,7 +65,7 @@ function GameManager(props) {
     useEffect(() => {
         initSocket();
 
-        window.onkeydown = (event) => {
+        const handleKeyDown = (event) => {
             if (disableAction || !myTurnJs) {
                 return;
             }
@@ -112,17 +112,20 @@ function GameManager(props) {
             }
         };
 
-        window.onkeyup = (event) => {
+        const handleKeyUp = (event) => {
             switch (event.code) {
                 case "KeyA":
                 case "KeyD":
-                    if(myTurnJs) {
+                    if (myTurnJs) {
                         sendEvent("done");
                         clearInterval(interval);
                         interval = null;
                     }
             }
         };
+
+        window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("keydown", handleKeyDown);
 
         Events.on(engine, "collisionStart", (event) => {
             event.pairs.forEach((collision) => {
@@ -151,7 +154,7 @@ function GameManager(props) {
                 }
                 if (!disableAction && (collision.bodyA.name === "topLine" || collision.bodyB.name === "tobLine")) {
                     sendEvent("GameOver");
-                    alert("Game Over!");
+                    gameOver();
                 }
             })
         });
@@ -180,8 +183,27 @@ function GameManager(props) {
 
         World.add(world, [leftWall, rightWall, ground, tobLine]);
 
+        const renderElement = render.canvas;
+        renderElement.style.marginLeft = "auto";
+        renderElement.style.marginRight = "auto";
+        renderElement.style.display = "block";
+
         Render.run(render);
         Runner.run(engine);
+
+        return () => {
+            World.clear(world, true);
+
+            Render.stop(render);
+            Runner.stop(engine);
+
+            if (render.canvas) {
+                render.canvas.remove();
+            }
+
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        }
 
     }, []);
 
@@ -215,7 +237,7 @@ function GameManager(props) {
             pc.ondatachannel = event => {
                 var channel = event.channel;
                 channel.onopen = () => console.log("데이터 채널 오픈");
-                channel.onmessage = e => {recieveEvent(e)};
+                channel.onmessage = e => { recieveEvent(e) };
             }
             pc.setLocalDescription(await pc.createOffer());
         }
@@ -248,6 +270,13 @@ function GameManager(props) {
         World.add(world, body);
     }
 
+    function gameOver() {
+        alert("Game Over!");
+        World.clear(world, true);
+        //여기에 점수를 POST하는 메서드 필요
+        pointRef.current.resetPoint();
+    }
+
     function sendEvent(eventCode, indexNum) {
         if (dataChannel.readyState === "open") {
             dataChannel.send(JSON.stringify({ event: eventCode, index: indexNum }));
@@ -260,14 +289,14 @@ function GameManager(props) {
 
             let circleBodies = [];
 
-            for(let body of bodies) {
-                if(body.label === 'Circle Body') {
+            for (let body of bodies) {
+                if (body.label === 'Circle Body') {
                     let index = body.index;
                     let x = body.position.x;
                     let y = body.position.y;
                     let angle = body.angle;
                     let velocity = body.velocity;
-                    circleBodies.push({index: index, x: x, y: y, angle: angle, velocity});
+                    circleBodies.push({ index: index, x: x, y: y, angle: angle, velocity });
                 }
             }
             dataChannel.send(JSON.stringify({ event: 'world', bodies: circleBodies }));
@@ -325,7 +354,7 @@ function GameManager(props) {
         <>
             <h1>제목</h1>
             <button onClick={() => addFruit(-1)}>시작하기</button>
-            <Point ref={pointRef}/>
+            <Point ref={pointRef} />
         </>
     );
 

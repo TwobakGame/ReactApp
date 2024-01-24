@@ -3,6 +3,9 @@ import { FRUITS_BASE as FRUITS } from "./fruits";
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Point from "./Point";
+import { Button } from "@mui/material";
+import "../../css/game.css";
+
 
 const iceConfig = Object.freeze({
     iceServers: [
@@ -55,6 +58,12 @@ function GameManager(props) {
     }
     ));
     const [world, setWorld] = useState(engine.world);
+    const [start, setStart] = useState(true);
+
+    const handleStart = () => {
+        setStart(true);
+    }
+
     const roomNumber = props.roomnumber;
     const pointRef = useRef();
 
@@ -203,6 +212,9 @@ function GameManager(props) {
 
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
+
+            if (pc) pc.close();
+            if (socket) socket.close();
         }
 
     }, []);
@@ -234,6 +246,20 @@ function GameManager(props) {
         if (socket) {
             socket.emit('join', roomNumber);
             pc.addEventListener("icecandidate", handleIce);
+            pc.addEventListener("connectionstatechange", (event) => {
+                switch (pc.connectionState) {
+                    case "connected":
+                        console.log("상대와 연결됨");
+                        setStart(false);
+                        break;
+                    case "disconnected":
+                    case "closed":
+                    case "failed":
+                        alert("상대방과 연결이 끊겨 게임을 중단합니다.");
+                        window.location.href = "/";
+                        break;
+                }
+            })
             pc.ondatachannel = event => {
                 var channel = event.channel;
                 channel.onopen = () => console.log("데이터 채널 오픈");
@@ -275,6 +301,7 @@ function GameManager(props) {
         World.clear(world, true);
         //여기에 점수를 POST하는 메서드 필요
         pointRef.current.resetPoint();
+        setStart(false);
     }
 
     function sendEvent(eventCode, indexNum) {
@@ -351,11 +378,12 @@ function GameManager(props) {
     }
 
     return (
-        <>
-            <h1>제목</h1>
-            <button onClick={() => addFruit(-1)}>시작하기</button>
+        <div className="game-page">
+
+            <Button variant="contained" className="start-button" disabled={start} onClick={() => { handleStart(); addFruit(-1); }}>시작하기</Button>
             <Point ref={pointRef} />
-        </>
+
+        </div>
     );
 
 }

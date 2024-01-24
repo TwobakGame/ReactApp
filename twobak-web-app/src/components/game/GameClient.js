@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Point from "./Point";
 
+
 const iceConfig = Object.freeze({
     iceServers: [
         {
@@ -195,6 +196,10 @@ function GameClient(props) {
 
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
+            
+            if(pc) pc.close();
+            if(socket) socket.close();
+            
         }
 
     }, []);
@@ -213,6 +218,19 @@ function GameClient(props) {
         if (socket) {
             socket.emit('join', roomNumber);
             pc.addEventListener("icecandidate", handleIce);
+            pc.addEventListener("connectionstatechange", (event) => {
+                switch (pc.connectionState) {
+                    case "connected":
+                      console.log("상대와 연결됨");
+                      break;
+                    case "disconnected":
+                    case "closed":
+                    case "failed":
+                      alert("상대방과 연결이 끊겨 게임을 중단합니다.");
+                      window.location.href = "/";
+                      break;
+                }
+            })
             pc.ondatachannel = event => {
                 var channel = event.channel;
                 channel.onopen = () => console.log("데이터 채널 오픈");
@@ -332,7 +350,7 @@ function GameClient(props) {
 
                 break;
             case "point":
-                pointRef.current.handlePoint(data.index);
+                changePoint(data.index);
                 break;
             case "GameOver":
                 alert("Game Over!");
@@ -342,10 +360,9 @@ function GameClient(props) {
 
 
     return (
-        <>
-            <h1>제목</h1>
+        <div className="game-page">
             <Point ref={pointRef}/>
-        </>
+        </div>
     );
 
 }

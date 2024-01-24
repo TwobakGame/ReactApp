@@ -21,8 +21,24 @@ import '../css/main.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { modalStyle } from '../Style';
+import { alpha, getContrastRatio } from '@mui/material/styles';
 
+const greenBase = '#5ED540';
+const greenMain = alpha(greenBase, 0.7);
 
+const theme = createTheme({
+  palette: {
+    green: {
+      main: greenMain,
+      light: alpha(greenBase, 0.5),
+      dark: alpha(greenBase, 0.9),
+      contrastText: getContrastRatio(greenBase, '#fff') > 4.5 ? '#fff' : '#111',
+    },
+    green2: {
+      main: '#318F23'
+    }
+  },
+});
 
 
 export default function Main() {
@@ -34,19 +50,6 @@ export default function Main() {
   const navigate = useNavigate();
   const nameRef = React.useRef('');
   const roomNumberRef = React.useRef('');
-
-  function Copyright() {
-    return (
-      <Typography variant="body2" color="text.secondary" align="center">
-        {'Copyright © '}
-        <Link color="inherit" href="https://mui.com/">
-          Your Website
-        </Link>{' '}
-        {new Date().getFullYear()}
-        {'.'}
-      </Typography>
-    );
-  }
 
   //WAS로부터 방 대기열 받아와서 대체할 것
   const rows = [
@@ -93,15 +96,22 @@ export default function Main() {
 
 
   return (
-    <ThemeProvider theme={defaultTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="relative">
+      <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static" color='green'>
         <Toolbar>
-          <Typography variant="h6" color="inherit" noWrap>
-            투박게임
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            이미지 넣기
           </Typography>
+          {
+            login ?
+            <Button color="inherit">로그아웃</Button> :
+            <Button color="inherit" href="/signin">로그인</Button>
+          }
         </Toolbar>
       </AppBar>
+    </Box>
       <main>
         {/* Hero unit */}
         <Box
@@ -130,8 +140,8 @@ export default function Main() {
               spacing={2}
               justifyContent="center"
             >
-              <Button variant="contained"  onClick={() => {handleRoom()}}>방 만들기</Button>
-              <Button variant="outlined" onClick={() => {handleRoomNumberModal()}}>코드로 참여하기</Button>
+              <Button variant="contained"  onClick={() => {handleRoom()}} color='green'>방 만들기</Button>
+              <Button variant="outlined" onClick={() => {handleRoomNumberModal()} } color='green2'>코드로 참여하기</Button>
             </Stack>
           </Container>
         </Box>
@@ -165,21 +175,6 @@ export default function Main() {
         </Container>
       </main>
       {/* Footer */}
-      <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
-        <Typography variant="h6" align="center" gutterBottom>
-          Footer
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          align="center"
-          color="text.secondary"
-          component="p"
-        >
-          Something here to give the footer a purpose!
-        </Typography>
-        <Copyright />
-      </Box>
-
       <div>
         <Modal
           open={unloginedModal}

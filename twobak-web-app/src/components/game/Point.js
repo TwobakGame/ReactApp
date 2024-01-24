@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
+import "../../css/point.css";
 
 const Point = forwardRef((props, ref) => {
 
@@ -11,7 +12,7 @@ const Point = forwardRef((props, ref) => {
 
     const handlePoint = (idx) => {
         idx = idx + 1;
-        setPoint(point + idx + idx*2);
+        setPoint(point + idx + idx * 2);
     }
 
     const resetPoint = () => {
@@ -19,7 +20,9 @@ const Point = forwardRef((props, ref) => {
     }
 
     return (
-        <p>point : {point}</p>
+        <div class="box1">
+            score : {point}
+        </div>
     )
 });
 

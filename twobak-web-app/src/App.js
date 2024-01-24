@@ -4,6 +4,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Main from './components/Main';
 import GameManager from './components/game/GameManager';
 import GameClient from './components/game/GameClient';
+import SignUp from './components/SignUp';
+import SignIn from './components/SignIn';
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
           <Route path='/' element={<Main/>}></Route>
           <Route path='/gamemanager/:roomnumber' element={<GameManager/>}></Route>
           <Route path='/gameclient/:roomnumber' element={<GameClient/>}></Route>
+          <Route path='/signup' element={<SignUp/>}></Route>
+          <Route path='signin' element={<SignIn/>}></Route>
         </Routes>
       </BrowserRouter>
     </div>

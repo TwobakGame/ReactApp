@@ -12,6 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { call } from '../api/Api';
 
 // TODO remove, this demo shouldn't need to reset the theme.
 
@@ -29,11 +30,34 @@ export default function SignIn() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const SignInDTO = {
-        id: data.get('id'),
-        password: data.get('password'),
+      email: data.get('id'),
+      password: data.get('password'),
     }
-    console.log(SignInDTO);
-    console.log(autoLogin);
+
+    call("/users/login/", "POST", SignInDTO).then(
+      (response) => {
+        if(response.AccessToken !== undefined) {
+          if (autoLogin) {
+            const expirationDate = new Date();
+            expirationDate.setDate(expirationDate.getDate() + 7);
+  
+            const cookieString = `token=${response.AccessToken}; expires=${expirationDate.toUTCString()}; path=/`;
+  
+            document.cookie = cookieString;
+          }
+          else {
+            const cookieString = `token=${response.AccessToken}; path=/`;
+  
+            document.cookie = cookieString;
+          }
+          window.location.href = "/";
+        }
+        else {
+          alert("로그인 실패");
+        }
+
+      }
+    )
   };
 
   return (
@@ -74,7 +98,7 @@ export default function SignIn() {
               id="password"
             />
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" checked={autoLogin} onChange={handleAutoLogin}/>}
+              control={<Checkbox value="remember" color="primary" checked={autoLogin} onChange={handleAutoLogin} />}
               label="자동 로그인"
             />
             <Button

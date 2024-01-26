@@ -51,6 +51,16 @@ export default function Main() {
   const nameRef = React.useRef('');
   const roomNumberRef = React.useRef('');
 
+  React.useEffect(() => {
+    const cookieString = document.cookie;
+
+    const isTokenExists = cookieString.includes("token");
+
+    if (isTokenExists) {
+      setLogin(true);
+    }
+  }, []);
+
   //WAS로부터 방 대기열 받아와서 대체할 것
   const rows = [
     { name: 'Frozen yoghurt', play: '대기 중' },
@@ -62,7 +72,7 @@ export default function Main() {
   const defaultTheme = createTheme();
 
   const handleRoom = () => {
-    if(login) {
+    if (login) {
       handleNameModal();
     }
     else {
@@ -73,7 +83,7 @@ export default function Main() {
   const makeGame = () => {
     //alert(nameRef.current.value); //제목 제출하기
     const roomNumber = 1234;  //WAS -> redis 확인해서 중복되지 않는 방번호 요청할것
-  
+
     navigate(`gamemanager/${roomNumber}`);
   }
 
@@ -94,24 +104,31 @@ export default function Main() {
     setRoomNumberModal(!roomNumberModal);
   }
 
+  const signOut = () => {
+    const currentDate = new Date();
+
+    document.cookie = "token=; expires=" + currentDate.toUTCString() + "; path=/";
+    setLogin(false);
+  }
+
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" color='green'>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            이미지 넣기
-          </Typography>
-          {
-            login ?
-            <Button color="inherit">로그아웃</Button> :
-            <Button color="inherit" href="/signin">로그인</Button>
-          }
-        </Toolbar>
-      </AppBar>
-    </Box>
+        <AppBar position="static" color='green'>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              이미지 넣기
+            </Typography>
+            {
+              login ?
+                <Button color="inherit" onClick={() => {signOut()}}>로그아웃</Button> :
+                <Button color="inherit" href="/signin">로그인</Button>
+            }
+          </Toolbar>
+        </AppBar>
+      </Box>
       <main>
         {/* Hero unit */}
         <Box
@@ -140,8 +157,8 @@ export default function Main() {
               spacing={2}
               justifyContent="center"
             >
-              <Button variant="contained"  onClick={() => {handleRoom()}} color='green'>방 만들기</Button>
-              <Button variant="outlined" onClick={() => {handleRoomNumberModal()} } color='green2'>코드로 참여하기</Button>
+              <Button variant="contained" onClick={() => { handleRoom() }} color='green'>방 만들기</Button>
+              <Button variant="outlined" onClick={() => { handleRoomNumberModal() }} color='green2'>코드로 참여하기</Button>
             </Stack>
           </Container>
         </Box>
@@ -189,8 +206,8 @@ export default function Main() {
             <Typography id="modal-modal-description" sx={{ mt: 2 }}>
               방장 비로그인 이용 시 랭킹에 기록되지 않습니다.
             </Typography>
-            <Button className="apply-button" onClick={() => {handleNameModal()}}>계속</Button>
-            <button className="reject-button" onClick={() => {handleUnloginedModal()}}>나가기</button>
+            <Button className="apply-button" onClick={() => { handleNameModal() }}>계속</Button>
+            <button className="reject-button" onClick={() => { handleUnloginedModal() }}>나가기</button>
           </Box>
         </Modal>
       </div>
@@ -205,9 +222,9 @@ export default function Main() {
             <Typography id="modal-modal-title" variant="h6" component="h2">
               제목을 입력해주세요.
             </Typography>
-            <TextField fullWidth label="방 제목" id="fullWidth" inputRef={nameRef}/>
-            <Button className="apply-button" onClick={() => {makeGame()}}>방 만들기</Button>
-            <button className="reject-button" onClick={() => {handleNameModal()}}>나가기</button>
+            <TextField fullWidth label="방 제목" id="fullWidth" inputRef={nameRef} />
+            <Button className="apply-button" onClick={() => { makeGame() }}>방 만들기</Button>
+            <button className="reject-button" onClick={() => { handleNameModal() }}>나가기</button>
           </Box>
         </Modal>
       </div>
@@ -222,9 +239,9 @@ export default function Main() {
             <Typography id="modal-modal-title" variant="h6" component="h2">
               방 번호를 입력해주세요.
             </Typography>
-            <TextField fullWidth label="방 번호" id="fullWidth" inputRef={roomNumberRef}/>
-            <Button className="apply-button" onClick={() => {joinGame()}}>입장</Button>
-            <button className="reject-button" onClick={() => {handleRoomNumberModal()}}>나가기</button>
+            <TextField fullWidth label="방 번호" id="fullWidth" inputRef={roomNumberRef} />
+            <Button className="apply-button" onClick={() => { joinGame() }}>입장</Button>
+            <button className="reject-button" onClick={() => { handleRoomNumberModal() }}>나가기</button>
           </Box>
         </Modal>
       </div>

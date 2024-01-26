@@ -12,6 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { call } from '../api/Api';
 
 
 // TODO remove, this demo shouldn't need to reset the theme.
@@ -23,11 +24,20 @@ export default function SignUp() {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         const signUpDTO = {
-            id: data.get('id'),
+            email: data.get('id'),
             password: data.get('password'),
             nickname: data.get('nickname'),
         }
-        console.log({signUpDTO});
+        
+        call("/users/signin/", "POST", signUpDTO)
+            .then((response) => {
+                if(response.message !== undefined) {
+                    window.location.href = "/";
+                }
+                else {
+                    alert("중복된 이메일입니다.");
+                }
+            });
     };
 
     return (

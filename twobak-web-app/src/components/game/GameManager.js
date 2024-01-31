@@ -5,6 +5,7 @@ import io from "socket.io-client";
 import Point from "./Point";
 import { Button } from "@mui/material";
 import "../../css/game.css";
+import { useLocation } from "react-router-dom";
 
 
 const iceConfig = Object.freeze({
@@ -66,12 +67,16 @@ function GameManager(props) {
 
     const roomNumber = props.roomnumber;
     const pointRef = useRef();
+    const location = useLocation();
+    const nickName = location.state && location.state.nickName;
 
     const changePoint = (idx) => {
         pointRef.current.handlePoint(idx);
     };
 
     useEffect(() => {
+        
+        console.log("닉네임 : " , nickName)
         initSocket();
 
         const handleKeyDown = (event) => {
@@ -162,6 +167,7 @@ function GameManager(props) {
                     World.add(world, newBody);
                 }
                 if (!disableAction && (collision.bodyA.name === "topLine" || collision.bodyB.name === "tobLine")) {
+                    sendWorld();
                     sendEvent("GameOver");
                     gameOver();
                 }
@@ -297,7 +303,7 @@ function GameManager(props) {
     }
 
     function gameOver() {
-        alert("Game Over!");
+        alert(`Game Over!\n점수 : ${pointRef}`);
         World.clear(world, true);
         //여기에 점수를 POST하는 메서드 필요
         pointRef.current.resetPoint();

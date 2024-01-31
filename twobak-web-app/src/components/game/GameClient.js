@@ -271,7 +271,7 @@ function GameClient(props) {
     }
 
     function gameOver() {
-        alert("Game Over!");
+        alert(`Game Over!\n점수 : ${pointRef}`);
         World.clear(world, true);
         pointRef.current.resetPoint();
     }
@@ -353,7 +353,6 @@ function GameClient(props) {
                 changePoint(data.index);
                 break;
             case "GameOver":
-                alert("Game Over!");
                 gameOver();
         }
     }

@@ -81,13 +81,18 @@ export default function Main() {
   }
 
   const makeGame = () => {
-    //alert(nameRef.current.value); //제목 제출하기
+    if(login) {
+      //const roomName = nameRef.current.value;
+      //방 제목 제출하고 방 번호받는 API통신
+    }
+    //제목 제출하기
     const roomNumber = 1234;  //WAS -> redis 확인해서 중복되지 않는 방번호 요청할것
 
-    navigate(`gamemanager/${roomNumber}`);
+    navigate(`gamemanager/${roomNumber}`, {state: {nickName:'익명'}});
   }
 
   const joinGame = () => {
+    //유효한 방번호인지 확인 API 통신 필요함
     navigate(`gameclient/${roomNumberRef.current.value}`);
   }
 
@@ -117,15 +122,22 @@ export default function Main() {
       <CssBaseline />
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static" color='green'>
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              이미지 넣기
-            </Typography>
+          <Toolbar className='main-toolbar' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className='game-title'>
+              투박게임
+              </div>
+              
+              <div className='login-div'>
             {
               login ?
-                <Button color="inherit" onClick={() => {signOut()}}>로그아웃</Button> :
+                <Button color="inherit" onClick={() => {signOut()}}>로그아웃</Button>
+                :
+                <>
                 <Button color="inherit" href="/signin">로그인</Button>
+                <Button color="inherit" href="/signup">회원가입</Button>
+                </>
             }
+            </div> 
           </Toolbar>
         </AppBar>
       </Box>
@@ -139,15 +151,9 @@ export default function Main() {
           }}
         >
           <Container maxWidth="sm">
-            <Typography
-              component="h1"
-              variant="h2"
-              align="center"
-              color="text.primary"
-              gutterBottom
-            >
-              투박게임
-            </Typography>
+            <div className='image-div'>
+            <img className='twobak-img' src="/image/logo.png" width='200'/>
+            </div>
             <Typography variant="h5" align="center" color="text.secondary" paragraph>
               친구와 함께 즐기는 수박게임
             </Typography>

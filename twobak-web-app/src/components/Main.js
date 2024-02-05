@@ -22,6 +22,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { modalStyle } from '../Style';
 import { alpha, getContrastRatio } from '@mui/material/styles';
+import { call } from '../api/Api';
 
 const greenBase = '#5ED540';
 const greenMain = alpha(greenBase, 0.7);
@@ -54,7 +55,7 @@ export default function Main() {
   React.useEffect(() => {
     const cookieString = document.cookie;
 
-    const isTokenExists = cookieString.includes("token");
+    const isTokenExists = cookieString.includes("Authorization");
 
     if (isTokenExists) {
       setLogin(true);
@@ -82,18 +83,23 @@ export default function Main() {
 
   const makeGame = () => {
     if(login) {
-      //const roomName = nameRef.current.value;
-      //방 제목 제출하고 방 번호받는 API통신
+      const roomName = nameRef.current.value;
+      call("/rooms/make/", "POST", {roomName : roomName})
+            .then((response) => {
+                const roomNumber = response.roomNum;
+                navigate(`gamemanager/${roomNumber}`, {state: {nickName:'익명'}});
+            });
     }
     //제목 제출하기
-    const roomNumber = 1234;  //WAS -> redis 확인해서 중복되지 않는 방번호 요청할것
+      //WAS -> redis 확인해서 중복되지 않는 방번호 요청할것
 
-    navigate(`gamemanager/${roomNumber}`, {state: {nickName:'익명'}});
+    
   }
 
   const joinGame = () => {
-    //유효한 방번호인지 확인 API 통신 필요함
-    navigate(`gameclient/${roomNumberRef.current.value}`);
+    const roomNumber = roomNumberRef.current.value;
+    navigate(`gameclient/${roomNumber}`);
+    
   }
 
   const handleUnloginedModal = () => {

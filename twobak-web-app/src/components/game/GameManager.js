@@ -8,6 +8,7 @@ import "../../css/game.css";
 import { useLocation } from "react-router-dom";
 
 
+
 const iceConfig = Object.freeze({
     iceServers: [
         {
@@ -75,8 +76,8 @@ function GameManager(props) {
     };
 
     useEffect(() => {
-        
-        console.log("닉네임 : " , nickName)
+
+        console.log("닉네임 : ", nickName)
         initSocket();
 
         const handleKeyDown = (event) => {
@@ -303,9 +304,8 @@ function GameManager(props) {
     }
 
     function gameOver() {
-        alert(`Game Over!\n점수 : ${pointRef}`);
         World.clear(world, true);
-        //여기에 점수를 POST하는 메서드 필요
+        pointRef.current.savePoint();
         pointRef.current.resetPoint();
         setStart(false);
     }
@@ -388,7 +388,7 @@ function GameManager(props) {
 
             <Button variant="contained" className="start-button" disabled={start} onClick={() => { handleStart(); addFruit(-1); }}>시작하기</Button>
             <Point ref={pointRef} />
-
+            <button onClick={() => {gameOver()}}>임시끝내기</button>
         </div>
     );
 

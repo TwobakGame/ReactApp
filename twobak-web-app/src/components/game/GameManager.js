@@ -5,7 +5,8 @@ import io from "socket.io-client";
 import Point from "./Point";
 import { Button } from "@mui/material";
 import "../../css/game.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
+
 
 
 const iceConfig = Object.freeze({
@@ -65,7 +66,8 @@ function GameManager(props) {
         setStart(true);
     }
 
-    const roomNumber = props.roomnumber;
+    const params = useParams();
+    const roomNumber = params.roomnumber;
     const pointRef = useRef();
     const location = useLocation();
     const nickName = location.state && location.state.nickName;
@@ -75,8 +77,8 @@ function GameManager(props) {
     };
 
     useEffect(() => {
-        
-        console.log("닉네임 : " , nickName)
+
+        console.log("닉네임 : ", nickName, "방번호 : ", roomNumber);
         initSocket();
 
         const handleKeyDown = (event) => {
@@ -248,9 +250,13 @@ function GameManager(props) {
         socket.on('ice', (ice) => {
             pc.addIceCandidate(ice);
         });
+        socket.on('error', (message) => {
+            alert(message);
+            window.location.href = "/";
+        });
 
         if (socket) {
-            socket.emit('join', roomNumber);
+            socket.emit('join', roomNumber, "manager");
             pc.addEventListener("icecandidate", handleIce);
             pc.addEventListener("connectionstatechange", (event) => {
                 switch (pc.connectionState) {
@@ -303,9 +309,8 @@ function GameManager(props) {
     }
 
     function gameOver() {
-        alert(`Game Over!\n점수 : ${pointRef}`);
         World.clear(world, true);
-        //여기에 점수를 POST하는 메서드 필요
+        pointRef.current.savePoint();
         pointRef.current.resetPoint();
         setStart(false);
     }
@@ -388,7 +393,7 @@ function GameManager(props) {
 
             <Button variant="contained" className="start-button" disabled={start} onClick={() => { handleStart(); addFruit(-1); }}>시작하기</Button>
             <Point ref={pointRef} />
-
+            <button onClick={() => {gameOver()}}>임시끝내기</button>
         </div>
     );
 

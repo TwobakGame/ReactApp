@@ -24,11 +24,11 @@ export default function SignUp() {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         const signUpDTO = {
-            email: data.get('id'),
+            userid: data.get('userid'),
             password: data.get('password'),
             nickname: data.get('nickname'),
         }
-        
+        console.log(signUpDTO)
         call("/users/signin/", "POST", signUpDTO)
             .then((response) => {
                 if(response.message !== undefined) {
@@ -64,9 +64,9 @@ export default function SignUp() {
                                 <TextField
                                     required
                                     fullWidth
-                                    id="id"
+                                    id="userid"
                                     label="Id"
-                                    name="id"
+                                    name="userid"
                                 />
                             </Grid>
                             <Grid item xs={12}>

@@ -30,7 +30,7 @@ export default function SignIn() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const SignInDTO = {
-      email: data.get('id'),
+      userid: data.get('userid'),
       password: data.get('password'),
     }
 
@@ -41,12 +41,12 @@ export default function SignIn() {
             const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + 7);
   
-            const cookieString = `token=${response.AccessToken}; expires=${expirationDate.toUTCString()}; path=/`;
+            const cookieString = `Authorization=Bearer ${response.AccessToken}; expires=${expirationDate.toUTCString()}; path=/`;
   
             document.cookie = cookieString;
           }
           else {
-            const cookieString = `token=${response.AccessToken}; path=/`;
+            const cookieString = `Authorization=Bearer ${response.AccessToken}; path=/`;
   
             document.cookie = cookieString;
           }
@@ -83,9 +83,9 @@ export default function SignIn() {
               margin="normal"
               required
               fullWidth
-              id="id"
+              id="userid"
               label="Id"
-              name="id"
+              name="userid"
               autoFocus
             />
             <TextField

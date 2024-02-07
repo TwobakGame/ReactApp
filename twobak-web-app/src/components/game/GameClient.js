@@ -3,6 +3,7 @@ import { FRUITS_BASE as FRUITS } from "./fruits";
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Point from "./Point";
+import { useParams } from "react-router-dom";
 
 
 const iceConfig = Object.freeze({
@@ -55,7 +56,8 @@ function GameClient(props) {
     }
     ));
     const [world, setWorld] = useState(engine.world);
-    const roomNumber = props.roomnumber;
+    const params = useParams();
+    const roomNumber = params.roomnumber;
     const pointRef = useRef();
 
     const changePoint = (idx) => {
@@ -214,9 +216,13 @@ function GameClient(props) {
         socket.on('ice', (ice) => {
             pc.addIceCandidate(ice);
         });
+        socket.on('error', (message) => {
+            alert(message);
+            window.location.href = "/";
+        });
 
         if (socket) {
-            socket.emit('join', roomNumber);
+            socket.emit('join', roomNumber, "client");
             pc.addEventListener("icecandidate", handleIce);
             pc.addEventListener("connectionstatechange", (event) => {
                 switch (pc.connectionState) {

@@ -6,6 +6,7 @@ import Point from "./Point";
 import { Button } from "@mui/material";
 import "../../css/game.css";
 import { useLocation, useParams } from "react-router-dom";
+import { call } from "../../api/Api";
 
 
 
@@ -209,6 +210,9 @@ function GameManager(props) {
         Runner.run(engine);
 
         return () => {
+
+            call("/rooms/delete/", "POST", {roomNum : roomNumber});
+
             World.clear(world, true);
 
             Render.stop(render);

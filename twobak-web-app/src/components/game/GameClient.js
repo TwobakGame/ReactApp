@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Point from "./Point";
 import { useParams } from "react-router-dom";
+import { call } from "../../api/Api";
 
 
 const iceConfig = Object.freeze({
@@ -65,7 +66,17 @@ function GameClient(props) {
     };
 
     useEffect(() => {
-        initSocket();
+        
+        call("/rooms/delete/", "POST", {roomNum : roomNumber}).then((response) => {
+            console.log(response);
+            if(response.resultcode === "SUCCESS") {
+                initSocket();
+            }
+            else {
+                alert("방 입장에 실패했습니다.");
+                window.location.href = "/";
+            }
+        })
 
         const handleKeyDown = (event) => {
             if (disableAction || !myTurnJs) {

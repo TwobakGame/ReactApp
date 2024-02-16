@@ -34,9 +34,9 @@ export default function SignIn() {
       password: data.get('password'),
     }
 
-    call("/users/login/", "POST", SignInDTO).then(
+    call("/users/signin/", "POST", SignInDTO).then(
       (response) => {
-        if(response.AccessToken !== undefined) {
+        if(response.resultcode === "SUCCESS") {
           if (autoLogin) {
             const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + 7);

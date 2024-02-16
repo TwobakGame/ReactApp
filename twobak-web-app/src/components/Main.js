@@ -26,6 +26,7 @@ import { call } from '../api/Api';
 
 const greenBase = '#5ED540';
 const greenMain = alpha(greenBase, 0.7);
+const was = process.env.REACT_APP_WAS_ADDRESS;
 
 const theme = createTheme({
   palette: {
@@ -48,27 +49,42 @@ export default function Main() {
   const [nameModal, setNameModal] = useState(false);
   const [roomNumberModal, setRoomNumberModal] = useState(false);
   const [login, setLogin] = useState(false);
+  const [rows, setRows] = useState([]);
   const navigate = useNavigate();
   const nameRef = React.useRef('');
   const roomNumberRef = React.useRef('');
+
 
   React.useEffect(() => {
     const cookieString = document.cookie;
 
     const isTokenExists = cookieString.includes("Authorization");
 
+    call("/rooms/allinquiry/", "GET").then((response) => {
+      if (response.resultcode === "SUCCESS") {
+        let temp_rows = [];
+        for (let str of response.data) {
+          const arr = str.split(':');
+          const room = {
+            name: arr[0],
+            code: arr[2],
+            people: arr[1]
+          }
+          temp_rows.push(room);
+        }
+        setRows(temp_rows);
+      }
+      else {
+        console.log("방 목록 조회 실패");
+      }
+    })
+
+
     if (isTokenExists) {
       setLogin(true);
     }
   }, []);
 
-  //WAS로부터 방 대기열 받아와서 대체할 것
-  const rows = [
-    { name: 'Frozen yoghurt', play: '대기 중' },
-    { name: 'Frozen yoghurt', play: '대기 중' },
-    { name: 'Frozen yoghurt', play: '대기 중' },
-    { name: 'Frozen yoghurt', play: '대기 중' },
-  ];
   // TODO remove, this demo shouldn't need to reset the theme.
   const defaultTheme = createTheme();
 
@@ -82,24 +98,50 @@ export default function Main() {
   }
 
   const makeGame = () => {
-    if(login) {
-      const roomName = nameRef.current.value;
-      call("/rooms/make/", "POST", {roomName : roomName})
-            .then((response) => {
-                const roomNumber = response.roomNum;
-                navigate(`gamemanager/${roomNumber}`, {state: {nickName:'익명'}});
-            });
-    }
-    //제목 제출하기
-      //WAS -> redis 확인해서 중복되지 않는 방번호 요청할것
 
-    
+    const roomName = nameRef.current.value;
+    const nickName = "익명";
+
+    call("/rooms/make/", "POST", { roomName: roomName })
+      .then((response) => {
+        if (response.resultcode === "SUCCESS") {
+          const roomNumber = response.data.roomNum;
+          navigate(`gamemanager/${roomNumber}`, { state: { nickName: nickName } });
+        }
+        else {
+          alert('다시 시도해주세요.');
+        }
+
+      });
+
+
   }
 
   const joinGame = () => {
     const roomNumber = roomNumberRef.current.value;
-    navigate(`gameclient/${roomNumber}`);
+    call(`/rooms/inquiry/?roomNum=${roomNumber}`, "GET").then((response) => {
+      if(response.resultcode === "SUCCESS") {
+        navigate(`gameclient/${roomNumber}`);
+      }
+      else {
+        alert("입장 불가능한 방입니다.");
+        window.location.href = "/";
+      }
+    })
     
+
+  }
+
+  const joinGameByClick = (code) => {
+    call(`/rooms/inquiry/?roomNum=${code}`, "GET").then((response) => {
+      if(response.resultcode === "SUCCESS") {
+        navigate(`gameclient/${code}`);
+      }
+      else {
+        alert("입장 불가능한 방입니다.");
+        window.location.href = "/";
+      }
+    })
   }
 
   const handleUnloginedModal = () => {
@@ -129,21 +171,21 @@ export default function Main() {
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static" color='green'>
           <Toolbar className='main-toolbar' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div className='game-title'>
+            <div className='game-title'>
               투박게임
-              </div>
-              
-              <div className='login-div'>
-            {
-              login ?
-                <Button color="inherit" onClick={() => {signOut()}}>로그아웃</Button>
-                :
-                <>
-                <Button color="inherit" href="/signin">로그인</Button>
-                <Button color="inherit" href="/signup">회원가입</Button>
-                </>
-            }
-            </div> 
+            </div>
+
+            <div className='login-div'>
+              {
+                login ?
+                  <Button color="inherit" onClick={() => { signOut() }}>로그아웃</Button>
+                  :
+                  <>
+                    <Button color="inherit" href="/signin">로그인</Button>
+                    <Button color="inherit" href="/signup">회원가입</Button>
+                  </>
+              }
+            </div>
           </Toolbar>
         </AppBar>
       </Box>
@@ -158,7 +200,7 @@ export default function Main() {
         >
           <Container maxWidth="sm">
             <div className='image-div'>
-            <img className='twobak-img' src="/image/logo.png" width='200'/>
+              <img className='twobak-img' src="/image/logo.png" width='200' />
             </div>
             <Typography variant="h5" align="center" color="text.secondary" paragraph>
               친구와 함께 즐기는 수박게임
@@ -181,21 +223,23 @@ export default function Main() {
               <TableHead>
                 <TableRow>
                   <TableCell>제목</TableCell>
-                  <TableCell align="right">진행</TableCell>
+                  <TableCell align="right">코드</TableCell>
+                  <TableCell align="right">인원수</TableCell>
                   <TableCell align="right"></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {rows.map((row) => (
                   <TableRow
-                    key={row.name}
+                    key={row.code}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   >
                     <TableCell component="th" scope="row">
                       {row.name}
                     </TableCell>
-                    <TableCell align="right">{row.play}</TableCell>
-                    <TableCell align="right"><button className="join-button">Join</button></TableCell>
+                    <TableCell align="right">{row.code}</TableCell>
+                    <TableCell align="right">{row.people}</TableCell>
+                    <TableCell align="right"><button className="join-button" onClick={() => { joinGameByClick(row.code) }}>Join</button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

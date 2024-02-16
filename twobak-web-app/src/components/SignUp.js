@@ -28,14 +28,14 @@ export default function SignUp() {
             password: data.get('password'),
             nickname: data.get('nickname'),
         }
-        console.log(signUpDTO)
+
         call("/users/signin/", "POST", signUpDTO)
             .then((response) => {
-                if(response.message !== undefined) {
+                if(response.resultcode == "SUCCESS") {
                     window.location.href = "/";
                 }
                 else {
-                    alert("중복된 이메일입니다.");
+                    alert("회원가입 실패");
                 }
             });
     };

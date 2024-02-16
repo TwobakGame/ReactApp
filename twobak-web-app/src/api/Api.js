@@ -1,4 +1,4 @@
-const WAS_URL = "http://localhost:8000";
+const WAS_URL = process.env.REACT_APP_WAS_ADDRESS;
 
 export async function call(api, method, request) {
     let header;

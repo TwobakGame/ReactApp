@@ -33,10 +33,19 @@ export async function call(api, method, request) {
 
     return fetch(options.url, options)
         .then((response) =>
-            (response.json())
+            {
+                const json = response.json();
+                if(json.resultcode === undefined) {
+                    return {resultcode : "FAIL"};
+                }
+                else return json;
+                
+            
+            }
         )
         .catch((error) => {
-            console.log(error.status);
+            console.log(error);
+            return {resultcode : "FAIL"};
         });
 }
 

@@ -172,7 +172,8 @@ export default function Main() {
         <AppBar position="static" color='green'>
           <Toolbar className='main-toolbar' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className='game-title'>
-              투박게임
+              <a href='/'>투박게임</a>
+              <a href='/ranking' className='ranking-tab-a'>랭킹</a>
             </div>
 
             <div className='login-div'>

@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import "../../css/point.css";
-import { call } from "../../api/Api";
+import { call, get_cookie } from "../../api/Api";
 
 const Point = forwardRef((props, ref) => {
 
@@ -18,11 +18,19 @@ const Point = forwardRef((props, ref) => {
     }
 
     const savePoint = () => {
-        alert(`Game Over!\n점수 : ${point}`);
-        call("/users/savescore/", "POST", { score: `${point}` })
+        const cookieString = document.cookie;
+
+        const isTokenExists = cookieString.includes("Nickname");
+        if(isTokenExists) {
+            const nickname = get_cookie("Nickname");
+            call("/users/savescore/", "POST", { user: nickname, score: `${point}` })
             .then((response) => {
                 console.log(response);
             });
+        }
+
+        alert(`Game Over!\n점수 : ${point}`);
+
     }
 
     const resetPoint = () => {

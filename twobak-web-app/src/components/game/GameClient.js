@@ -221,7 +221,6 @@ function GameClient(props) {
         socket = io("http://localhost:443");
 
         socket.on('answer', (answer) => {
-            console.log("answer 받음");
             pc.setRemoteDescription(answer);
         });
         socket.on('ice', (ice) => {
@@ -256,13 +255,11 @@ function GameClient(props) {
             const offer = await pc.createOffer();
             pc.setLocalDescription(offer);
             socket.emit('offer', offer);
-            console.log("offer 보냄");
         }
     }
 
     function handleIce(data) {
         socket.emit("ice", data.candidate);
-        console.log("sent my candidate");
     }
 
     function addFruit(index) {
@@ -291,6 +288,7 @@ function GameClient(props) {
         alert(`Game Over!\n점수 : ${pointRef}`);
         World.clear(world, true);
         pointRef.current.resetPoint();
+        myTurnJs = false;
     }
 
     function sendEvent(eventCode, indexNum) {
@@ -301,7 +299,6 @@ function GameClient(props) {
 
     function recieveEvent(event) {
         const data = JSON.parse(event.data);
-        console.log(data);
         switch (data.event) {
             case "KeyA":
                 if (interval) return;
@@ -345,7 +342,6 @@ function GameClient(props) {
                 addFruit(data.index);
                 break;
             case "world":
-                console.log(data.bodies);
                 World.clear(world, true);
 
                 for (let now of data.bodies) {

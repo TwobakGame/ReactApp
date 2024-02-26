@@ -64,14 +64,13 @@ function GameManager(props) {
     const [start, setStart] = useState(true);
 
     const handleStart = () => {
-        setStart(true);
+        setStart(!start);
     }
 
     const params = useParams();
     const roomNumber = params.roomnumber;
     const pointRef = useRef();
     const location = useLocation();
-    const nickName = location.state && location.state.nickName;
 
     const changePoint = (idx) => {
         pointRef.current.handlePoint(idx);
@@ -79,7 +78,6 @@ function GameManager(props) {
 
     useEffect(() => {
 
-        console.log("닉네임 : ", nickName, "방번호 : ", roomNumber);
         initSocket();
 
         const handleKeyDown = (event) => {
@@ -170,8 +168,6 @@ function GameManager(props) {
                     World.add(world, newBody);
                 }
                 if (!disableAction && (collision.bodyA.name === "topLine" || collision.bodyB.name === "tobLine")) {
-                    sendWorld();
-                    sendEvent("GameOver");
                     gameOver();
                 }
             })
@@ -235,7 +231,6 @@ function GameManager(props) {
         socket = io("http://localhost:443");
 
         socket.on('offer', async (offer) => {
-            console.log("offer 받음");
             if (pc.signalingState === 'have-local-offer') {
                 try {
                     await pc.setRemoteDescription(offer);
@@ -287,7 +282,6 @@ function GameManager(props) {
 
     function handleIce(data) {
         socket.emit("ice", data.candidate);
-        console.log("sent my candidate");
     }
 
     function addFruit(index) {
@@ -313,10 +307,13 @@ function GameManager(props) {
     }
 
     function gameOver() {
+        sendWorld();
+        sendEvent("GameOver");
         World.clear(world, true);
         pointRef.current.savePoint();
         pointRef.current.resetPoint();
-        setStart(false);
+        addFruit(-1);
+        myTurnJs = true;
     }
 
     function sendEvent(eventCode, indexNum) {
@@ -347,7 +344,6 @@ function GameManager(props) {
 
     function recieveEvent(event) {
         const data = JSON.parse(event.data);
-        console.log(data);
         switch (data.event) {
             case "KeyA":
                 if (interval) return;

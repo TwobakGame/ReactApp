@@ -393,7 +393,6 @@ function GameManager(props) {
 
             <Button variant="contained" className="start-button" disabled={start} onClick={() => { handleStart(); addFruit(-1); }}>시작하기</Button>
             <Point ref={pointRef} />
-            <button onClick={() => {gameOver()}}>임시끝내기</button>
         </div>
     );
 

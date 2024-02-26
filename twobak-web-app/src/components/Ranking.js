@@ -54,14 +54,22 @@ export default function Ranking() {
 
     const isTokenExists = cookieString.includes("Authorization");
 
-    setRows(
-      [
-        {rank : 1, name : "시로", score : 1557},
-        {rank : 2, name : "마로", score : 1555},
-        {rank : 3, name : "킹연", score : 500}
-      ]
-    );
+    call("/users/rank/", "GET").then((response) => {
+      if(response.resultcode === "SUCCESS") {
+        let rows = [];
+        let rank = 1;
+        for(let row of response.data) {
+          rows.push({
+            rank : rank,
+            name : row.user__nickname,
+            score : row.score,
+          })
+          rank++;
+        }
 
+        setRows(rows);
+      }
+    })
 
     if (isTokenExists) {
       setLogin(true);

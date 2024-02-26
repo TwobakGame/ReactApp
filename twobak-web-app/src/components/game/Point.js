@@ -23,10 +23,7 @@ const Point = forwardRef((props, ref) => {
         const isTokenExists = cookieString.includes("Nickname");
         if(isTokenExists) {
             const nickname = get_cookie("Nickname");
-            call("/users/savescore/", "POST", { user: nickname, score: `${point}` })
-            .then((response) => {
-                console.log(response);
-            });
+            call("/users/savescore/", "POST", { user: nickname, score: `${point}` });
         }
 
         alert(`Game Over!\n점수 : ${point}`);

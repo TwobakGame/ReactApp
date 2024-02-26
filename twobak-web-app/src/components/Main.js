@@ -64,7 +64,6 @@ export default function Main() {
       if (response.resultcode === "SUCCESS") {
         let temp_rows = [];
         for (let row of response.data) {
-          console.log(row);
           const room = {
             name: row.roomName,
             code: row.roomNum,

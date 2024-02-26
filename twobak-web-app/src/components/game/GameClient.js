@@ -218,7 +218,7 @@ function GameClient(props) {
     }, []);
 
     const initSocket = async () => {
-        socket = io("http://localhost:443");
+        socket = io(process.env.REACT_APP_WAS_ADDRESS);
 
         socket.on('answer', (answer) => {
             pc.setRemoteDescription(answer);

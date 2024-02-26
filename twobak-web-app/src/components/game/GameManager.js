@@ -228,7 +228,7 @@ function GameManager(props) {
     }, []);
 
     const initSocket = async () => {
-        socket = io("http://localhost:443");
+        socket = io(process.env.REACT_APP_WAS_ADDRESS);
 
         socket.on('offer', async (offer) => {
             if (pc.signalingState === 'have-local-offer') {

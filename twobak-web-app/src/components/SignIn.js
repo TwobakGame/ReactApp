@@ -40,15 +40,19 @@ export default function SignIn() {
           if (autoLogin) {
             const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + 7);
-  
+
             const cookieString = `Authorization=Bearer ${response.AccessToken}; expires=${expirationDate.toUTCString()}; path=/`;
-  
+            const nameString = `Nickname=${response.nickname}; expires=${expirationDate.toUTCString()}; path=/`
+          
             document.cookie = cookieString;
+            document.cookie = nameString;
           }
           else {
             const cookieString = `Authorization=Bearer ${response.AccessToken}; path=/`;
-  
+            const nameString = `Nickname=${response.nickname}; path=/`
+
             document.cookie = cookieString;
+            document.cookie = nameString;
           }
           window.location.href = "/";
         }

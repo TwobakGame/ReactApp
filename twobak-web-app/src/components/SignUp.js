@@ -29,7 +29,7 @@ export default function SignUp() {
             nickname: data.get('nickname'),
         }
 
-        call("/users/signin/", "POST", signUpDTO)
+        call("/users/signup/", "POST", signUpDTO)
             .then((response) => {
                 if(response.resultcode == "SUCCESS") {
                     window.location.href = "/";

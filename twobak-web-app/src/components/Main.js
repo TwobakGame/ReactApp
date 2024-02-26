@@ -63,12 +63,11 @@ export default function Main() {
     call("/rooms/allinquiry/", "GET").then((response) => {
       if (response.resultcode === "SUCCESS") {
         let temp_rows = [];
-        for (let str of response.data) {
-          const arr = str.split(':');
+        for (let row of response.data) {
+          console.log(row);
           const room = {
-            name: arr[0],
-            code: arr[2],
-            people: arr[1]
+            name: row.roomName,
+            code: row.roomNum,
           }
           temp_rows.push(room);
         }
@@ -160,7 +159,8 @@ export default function Main() {
   const signOut = () => {
     const currentDate = new Date();
 
-    document.cookie = "token=; expires=" + currentDate.toUTCString() + "; path=/";
+    document.cookie = "Authorization=; expires=" + currentDate.toUTCString() + "; path=/";
+    document.cookie = "Nickname=; expires=" + currentDate.toUTCString() + "; path=/";
     setLogin(false);
   }
 
@@ -225,7 +225,6 @@ export default function Main() {
                 <TableRow>
                   <TableCell>제목</TableCell>
                   <TableCell align="right">코드</TableCell>
-                  <TableCell align="right">인원수</TableCell>
                   <TableCell align="right"></TableCell>
                 </TableRow>
               </TableHead>
@@ -239,7 +238,6 @@ export default function Main() {
                       {row.name}
                     </TableCell>
                     <TableCell align="right">{row.code}</TableCell>
-                    <TableCell align="right">{row.people}</TableCell>
                     <TableCell align="right"><button className="join-button" onClick={() => { joinGameByClick(row.code) }}>Join</button></TableCell>
                   </TableRow>
                 ))}

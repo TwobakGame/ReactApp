@@ -10,7 +10,7 @@ export async function call(api, method, request) {
     header = new Headers({
         "Content-Type": "application/json",
         "Corss-origin-Opener-Policy": "unsafe-none",
-        "Authorization" : authorization,
+        "Authorization": authorization,
     });
     body = request ? JSON.stringify(request) : null;
 
@@ -32,24 +32,20 @@ export async function call(api, method, request) {
     }
 
     return fetch(options.url, options)
-        .then((response) =>
-            {
-                const json = response.json();
-                if(json.resultcode === undefined) {
-                    return {resultcode : "FAIL"};
+        .then((response) => 
+            response.json().then((json) => {
+                if (json.resultcode === undefined) {
+                    return { resultcode: "FAIL" };
                 }
-                else return json;
-                
-            
-            }
-        )
+                return json;
+            }))
         .catch((error) => {
             console.log(error);
-            return {resultcode : "FAIL"};
+            return { resultcode: "FAIL" };
         });
 }
 
-function get_cookie(name) {
+export function get_cookie(name) {
     var value = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    return value? value[2] : null;
+    return value ? value[2] : null;
 }
